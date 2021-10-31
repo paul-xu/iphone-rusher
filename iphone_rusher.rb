@@ -6,6 +6,7 @@ class IphoneRusher
   def initialize
     # configure the driver
     options = Selenium::WebDriver::Chrome::Options.new
+	options.add_argument('--ignore-certificate-errors')
     # options.add_argument('--headless')
     @driver = Selenium::WebDriver.for :chrome, options: options
     @wait = Selenium::WebDriver::Wait.new(:timeout => 20)
@@ -50,10 +51,10 @@ class IphoneRusher
     # 如果没有用户名
     if driver.find_element(xpath: '//*[@id="signIn.customerLogin.appleId"]').attribute('value').empty?
       # 输入用户名
-      driver.find_element(xpath: '//*[@id="signIn.customerLogin.appleId"]').send_keys '<your_apple_id>'
+      driver.find_element(xpath: '//*[@id="signIn.customerLogin.appleId"]').send_keys '<Your Apple ID>'
     end
     # 输入密码
-    driver.find_element(xpath: '//*[@id="signIn.customerLogin.password"]').send_keys '<your_password>'
+    driver.find_element(xpath: '//*[@id="signIn.customerLogin.password"]').send_keys '<Your password>'
     # 点击登录
     driver.find_element(xpath: '//*[@id="signin-submit-button"]').click
     sleep 5
@@ -81,14 +82,15 @@ class IphoneRusher
       driver.find_element(xpath: '//*[@id="shoppingCart.actions.checkout"]').click
     else
       wait.until { driver.find_element(xpath: '//*[@id="signIn.customerLogin.password"]') }
-      driver.find_element(xpath: '//*[@id="signIn.customerLogin.password"]').send_keys '<your_password>'
+      driver.find_element(xpath: '//*[@id="signIn.customerLogin.password"]').send_keys '<Your password>'
       driver.find_element(xpath: '//*[@id="signin-submit-button"]').click
       sleep 5
     end
     
     wait.until { driver.find_element(css: '#fulfillmentOptionButtonGroup1') }
     sleep 5
-    driver.find_element(xpath: '//*[@id="checkout-container"]/div/div[6]/div[1]/div[2]/div/div/div[1]/div/div/div/fieldset/div[1]/div[2]').click
+    #driver.find_element(xpath: '//*[@id="checkout-container"]/div/div[6]/div[1]/div[2]/div/div/div[1]/div/div/div/fieldset/div[1]/div[2]').click
+	driver.find_element(xpath: '//*[@id="checkout-container"]/div[2]/div[2]/div/div/div/fieldset/div[1]/div[2]').click
   end
 
   def refresh_until
@@ -100,7 +102,8 @@ class IphoneRusher
   
 
   def any_store_selectable?
-    !element_exist?(css: '.is-error') && element_exist?(css: '.as-storelocator-searchresultlist .as-storelocator-searchitem')
+    #!element_exist?(css: '.is-error') && element_exist?(css: '.as-storelocator-searchresultlist .as-storelocator-searchitem')
+	!element_exist?(css: '.is-error') && element_exist?(css: '.rt-storelocator-store-multipleavailability')
   end
 
   def element_exist?(xpath: nil, css: nil)
@@ -116,21 +119,33 @@ class IphoneRusher
   end
 
   def select_store
-    driver.find_elements(css: '.as-storelocator-searchresultlist .as-storelocator-searchitem').first.click
-    drop = driver.find_element(id: "#{Date.today.to_s}timeWindows")
+    #driver.find_elements(css: '.as-storelocator-searchresultlist .as-storelocator-searchitem').first.click
+	driver.find_elements(css: '.rt-storelocator-store-group.form-selector-group').first.click
+    #drop = driver.find_element(id: "#{Date.today.to_s}timeWindows")
+	drop = driver.find_element(id: "checkout.fulfillment.pickupTab.pickup.timeSlot.dateTimeSlots.timeSlotValue")
     choose = Selenium::WebDriver::Support::Select.new(drop)
     choose.select_by(:index, 2)
     driver.find_element(id: 'rs-checkout-continue-button-bottom').click
     wait.until { driver.page_source.include?('你的身份证或护照号') }
-    driver.find_element(name: 'nationalId').send_keys '<your_id_num>'
+    driver.find_element(name: 'nationalId').send_keys '330103198203131615'
 
     driver.find_element(id: 'rs-checkout-continue-button-bottom').click
-    wait.until { driver.find_element(id: 'checkout.billing.billingOptions.options.2') }
-    driver.find_element(id: 'checkout.billing.billingOptions.options.2').click
+    #wait.until { driver.find_element(id: 'checkout.billing.billingOptions.options.2') }
+	wait.until { driver.find_element(id: 'checkout.billing.billingoptions.installments0001321713_label') }
+    #driver.find_element(id: 'checkout.billing.billingOptions.options.2').click
+	driver.find_element(id: 'checkout.billing.billingoptions.installments0001321713_label').click
+	
+	""" 付款方式选择
+	sleep(1)
+	#wait.until { driver.find_element(id: 'rs-checkout-continue-button-bottom') }
+	option = driver.find_elements(css: '.rs-payment-installment-options')[2]
+	option.find_elements(css: '.rs-payment-installments-option.form-selector')[4].click
+	"""
+	
     driver.find_element(id: 'rs-checkout-continue-button-bottom').click
-
+	sleep(10)
     wait.until {driver.find_element(css: '.rs-review-header-text')}
-    driver.find_element(id: 'rs-checkout-continue-button-bottom').click
+    #driver.find_element(id: 'rs-checkout-continue-button-bottom').click
   end
 end
 
